@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, StyleSheet, Platform , KeyboardAvoidingView } from "react-native";
+import { View, StyleSheet, KeyboardAvoidingView, Platform } from "react-native";
 import { GiftedChat, Bubble } from "react-native-gifted-chat";
 
 const Chat = ({ route, navigation }) => {
@@ -59,10 +59,6 @@ const Chat = ({ route, navigation }) => {
     <View style={[styles.container, { backgroundColor }]}
     accessibilityLabel="Chat screen"
     > 
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-      >
         <GiftedChat
           messages={messages}
           renderBubble={renderBubble}
@@ -71,8 +67,10 @@ const Chat = ({ route, navigation }) => {
             _id: 1,
           }}
            accessibilityLabel="Chat interface"
+           keyboardShouldPersistTaps="handled" 
         />
-      </KeyboardAvoidingView>
+         { Platform.OS === 'android' ? <KeyboardAvoidingView behavior="height" /> : null }
+         {Platform.OS === "ios"?<KeyboardAvoidingView behavior="padding" />: null}
     </View>
   );
 };

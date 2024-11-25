@@ -38,12 +38,14 @@ const Start = ({ navigation }) => {
                 <View style={styles.nameInputContainer}>
                   <TextInput
                     style={styles.nameInputText}
-                    n
                     value={name}
                     onChangeText={setName}
                     placeholder="Enter your name"
                     accessibilityLabel="Name input field"
                     accessibilityHint="Type your name here to proceed to the chat"
+                    accessibilityState={{
+                      disabled: !name, // Disables the button when the name is empty
+                    }}
                   />
                 </View>
 
@@ -80,11 +82,9 @@ const Start = ({ navigation }) => {
                   accessibilityRole="button"
                   accessibilityLabel="Enter chat button"
                   accessibilityHint="Navigates to the chat screen"
+                  disabled={!name} // Disable button when no name is entered
                 >
-                  <Text
-                    style={styles.enterChatText}
-                    accessibilityLabel="Enter chat text"
-                  >
+                  <Text style={styles.enterChatText}>
                     Enter Chat
                   </Text>
                 </TouchableOpacity>
