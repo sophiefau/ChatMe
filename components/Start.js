@@ -42,6 +42,8 @@ const Start = ({ navigation }) => {
                     value={name}
                     onChangeText={setName}
                     placeholder="Enter your name"
+                    accessibilityLabel="Name input field"
+                    accessibilityHint="Type your name here to proceed to the chat"
                   />
                 </View>
 
@@ -59,6 +61,11 @@ const Start = ({ navigation }) => {
                         backgroundColor === color && styles.selectedColor,
                       ]}
                       onPress={() => setBackgroundColor(color)}
+                      accessibilityRole="radio"
+                      accessibilityLabel={`Select background color ${color}`}
+                      accessibilityState={{
+                        selected: backgroundColor === color,
+                      }}
                     />
                   ))}
                 </View>
@@ -70,8 +77,16 @@ const Start = ({ navigation }) => {
                     navigation.navigate("Chat", { name, backgroundColor })
                   }
                   style={styles.buttonEnterChat}
+                  accessibilityRole="button"
+                  accessibilityLabel="Enter chat button"
+                  accessibilityHint="Navigates to the chat screen"
                 >
-                  <Text style={styles.enterChatText}>Enter Chat</Text>
+                  <Text
+                    style={styles.enterChatText}
+                    accessibilityLabel="Enter chat text"
+                  >
+                    Enter Chat
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
