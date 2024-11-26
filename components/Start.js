@@ -1,18 +1,35 @@
 import { useState } from "react";
 import {
-  StyleSheet,
-  View,
-  Text,
-  TextInput,
-  ImageBackground,
-  TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
-  TouchableWithoutFeedback,
-  Keyboard,
+  StyleSheet, View, Text, TextInput, 
+  ImageBackground, TouchableOpacity, KeyboardAvoidingView,
+  Platform, TouchableWithoutFeedback, Keyboard, Alert
 } from "react-native";
 
+// Import Firebase auth functions
+import { getAuth, signInAnonymously } from "firebase/auth"; 
+
 const Start = ({ navigation }) => {
+ // Set up anonymous auth
+  const auth = getAuth();
+
+  const signInUser = () => {
+    signInAnonymously(auth)
+      .then((result) => {
+        // Navigate to the Chat screen with route parameters
+        navigation.navigate("Chat", {
+          userID: result.user.uid,
+          name: name,
+          backgroundColor,
+        });
+        Alert.alert("Signed in Successfully!");
+      })
+      .catch((error) => {
+        console.error(error);
+        Alert.alert("Unable to sign in, try again later.");
+      });
+  };
+
+  // Set the user name and background color
   const [name, setName] = useState("");
   const [backgroundColor, setBackgroundColor] = useState("");
   const colors = ["#090C08", "#474056", "#8A95A5", "#B9C6AE"];
@@ -25,7 +42,7 @@ const Start = ({ navigation }) => {
       <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
         <View style={styles.container}>
           <ImageBackground
-            source={require("../img/Background.png")}
+            source={require("../assets/Background.png")}
             style={styles.background}
           >
             {/* Content Container */}
@@ -74,18 +91,22 @@ const Start = ({ navigation }) => {
 
                 {/* Enter Chat */}
                 <TouchableOpacity
+                  onPress={() => {
+                    if (name == '') {
+                        Alert.alert('Please enter your name');
+                    } else {
+                        signInUser();
+                    }
+                }}
                   title="Start Chatting"
-                  onPress={() =>
-                    navigation.navigate("Chat", { name, backgroundColor })
-                  }
                   style={styles.buttonEnterChat}
                   accessibilityRole="button"
                   accessibilityLabel="Enter chat button"
                   accessibilityHint="Navigates to the chat screen"
-                  disabled={!name} // Disable button when no name is entered
+                  disabled={!backgroundColor} // Require a background color selection
                 >
                   <Text style={styles.enterChatText}>
-                    Enter Chat
+                    Start Chatting
                   </Text>
                 </TouchableOpacity>
               </View>
