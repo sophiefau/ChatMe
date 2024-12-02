@@ -23,7 +23,7 @@ const Chat = ({ route, navigation, db, storage, isConnected }) => {
 
     if (isConnected === true) {
       if (unsubMessages) unsubMessages();
-      unsubMessages == null;
+      unsubMessages = null;
 
       const q = query(collection(db, "messages"), orderBy("createdAt", "desc"));
       unsubMessages = onSnapshot(q, (documentsSnapshot) => {
@@ -61,6 +61,7 @@ const Chat = ({ route, navigation, db, storage, isConnected }) => {
 
   // Button to send
   const onSend = (newMessages) => {
+    console.log('onSend')
     addDoc(collection(db, "messages"), newMessages[0]);
   };
 
@@ -87,7 +88,7 @@ const Chat = ({ route, navigation, db, storage, isConnected }) => {
 
   // Send a picture or location
   const renderCustomActions = (props) => {
-    return <CustomActions userID={userID} storage={storage} {...props} />;
+    return <CustomActions userID={userID} storage={storage} {...props} onSend={onSend} />;
   };
 
   const renderCustomView = (props) => {

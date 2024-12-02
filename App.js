@@ -17,6 +17,7 @@ import { LogBox, Alert } from "react-native";
 // Create the navigator
 const Stack = createStackNavigator();
 
+LogBox.ignoreAllLogs();
 LogBox.ignoreLogs(["AsyncStorage has been extracted from"]);
 
 const App = () => {
