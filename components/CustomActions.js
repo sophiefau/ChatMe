@@ -1,200 +1,127 @@
-import { useState } from "react";
-import {
-  StyleSheet, View, Text, TextInput, 
-  ImageBackground, TouchableOpacity, KeyboardAvoidingView,
-  Platform, TouchableWithoutFeedback, Keyboard, Alert
-} from "react-native";
+import { StyleSheet, View, Text, TouchableOpacity, Alert } from "react-native";
+import { useActionSheet } from "@expo/react-native-action-sheet";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
-// Import Firebase auth functions
-import { getAuth, signInAnonymously } from "firebase/auth"; 
+// import functionalities
+import * as ImagePicker from "expo-image-picker";
+import * as Location from "expo-location";
 
-const Start = ({ navigation }) => {
- // Set up anonymous auth
-  const auth = getAuth();
+const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, storage, userID }) => {
+  const actionSheet = useActionSheet();
 
-  const signInUser = () => {
-    signInAnonymously(auth)
-      .then((result) => {
-        // Navigate to the Chat screen with route parameters
-        navigation.navigate("Chat", {
-          userID: result.user.uid,
-          name: name,
-          backgroundColor,
-        });
-        Alert.alert("Signed in Successfully!");
-      })
-      .catch((error) => {
-        console.error(error);
-        Alert.alert("Unable to sign in, try again later.");
-      });
+  const onActionPress = () => {
+    const options = [
+      "Choose From Library",
+      "Take Picture",
+      "Send Location",
+      "Cancel",
+    ];
+    const cancelButtonIndex = options.length - 1;
+    actionSheet.showActionSheetWithOptions(
+      {
+        options,
+        cancelButtonIndex,
+      },
+      async (buttonIndex) => {
+        switch (buttonIndex) {
+          case 0:
+            pickImage();
+            return;
+          case 1:
+            takePhoto();
+            return;
+          case 2:
+            getLocation();
+          default:
+        }
+      }
+    );
   };
 
-  // Set the user name and background color
-  const [name, setName] = useState("");
-  const [backgroundColor, setBackgroundColor] = useState("");
-  const colors = ["#090C08", "#474056", "#8A95A5", "#B9C6AE"];
+  // Send picture
+  const generateReference = (uri) => {
+    const timeStamp = (new Date()).getTime();
+    const imageName = uri.split("/")[uri.split("/").length - 1];
+    return `${userID}-${timeStamp}-${imageName}`;
+  }
+  
+  const pickImage = async () => {
+    let permissions = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (permissions?.granted) {
+      let result = await ImagePicker.launchImageLibraryAsync();
+      if (!result.canceled) await uploadAndSendImage(result.assets[0].uri);
+      else Alert.alert("Permissions haven't been granted.");
+    }
+  }
+
+  const takePhoto = async () => {
+    let permissions = await ImagePicker.requestCameraPermissionsAsync();
+    if (permissions?.granted) {
+      let result = await ImagePicker.launchCameraAsync();
+      if (!result.canceled) await uploadAndSendImage(result.assets[0].uri);
+      else Alert.alert("Permissions haven't been granted.");
+    }
+  }
+
+  const uploadAndSendImage = async (imageURI) => {
+    const uniqueRefString = generateReference(imageURI);
+    const newUploadRef = ref(storage, uniqueRefString);
+    const response = await fetch(imageURI);
+    const blob = await response.blob();
+    uploadBytes(newUploadRef, blob).then(async (snapshot) => {
+      const imageURL = await getDownloadURL(snapshot.ref)
+      onSend({ image: imageURL })
+    });
+  }
+
+  // Send location
+  const getLocation = async () => {
+    console.log('click here');
+    let permissions = await Location.requestForegroundPermissionsAsync();
+    console.log(permissions);
+    if (permissions?.granted) {
+      const location = await Location.getCurrentPositionAsync({});
+      console.log(location);
+      if (location) {
+        onSend({
+          location: {
+            longitude: location.coords.longitude,
+            latitude: location.coords.latitude,
+          },
+        });
+      } else Alert.alert("Error occurred while fetching location");
+    } else Alert.alert("Permissions haven't been granted.");
+  };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"} // For iOS, use padding, for Android, use height
-      style={{ flex: 1 }}
-    >
-      <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-        <View style={styles.container}>
-          <ImageBackground
-            source={require("../assets/Background.png")}
-            style={styles.background}
-          >
-            {/* Content Container */}
-            <View style={styles.contentContainer}>
-              <Text style={styles.appTitle}>ChatMe</Text>
-
-              {/* Input Container */}
-              <View style={styles.inputContainer}>
-                {/* Enter Your Name */}
-                <View style={styles.nameInputContainer}>
-                  <TextInput
-                    style={styles.nameInputText}
-                    value={name}
-                    onChangeText={setName}
-                    placeholder="Enter your name"
-                    accessibilityLabel="Name input field"
-                    accessibilityHint="Type your name here to proceed to the chat"
-                    accessibilityState={{
-                      disabled: !name, // Disables the button when the name is empty
-                    }}
-                  />
-                </View>
-
-                {/* Choose Background */}
-                <Text style={styles.chooseColorText}>
-                  Choose Background Color:
-                </Text>
-                <View style={styles.chooseColorContainer}>
-                  {colors.map((color) => (
-                    <TouchableOpacity
-                      key={color}
-                      style={[
-                        styles.colorOption,
-                        { backgroundColor: color },
-                        backgroundColor === color && styles.selectedColor,
-                      ]}
-                      onPress={() => setBackgroundColor(color)}
-                      accessibilityRole="radio"
-                      accessibilityLabel={`Select background color ${color}`}
-                      accessibilityState={{
-                        selected: backgroundColor === color,
-                      }}
-                    />
-                  ))}
-                </View>
-
-                {/* Enter Chat */}
-                <TouchableOpacity
-                  onPress={() => {
-                    if (name == '') {
-                        Alert.alert('Please enter your name');
-                    } else {
-                        signInUser();
-                    }
-                }}
-                  title="Start Chatting"
-                  style={styles.buttonEnterChat}
-                  accessibilityRole="button"
-                  accessibilityLabel="Enter chat button"
-                  accessibilityHint="Navigates to the chat screen"
-                  disabled={!backgroundColor} // Require a background color selection
-                >
-                  <Text style={styles.enterChatText}>
-                    Start Chatting
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </ImageBackground>
-        </View>
-      </TouchableWithoutFeedback>
-    </KeyboardAvoidingView>
+<TouchableOpacity style={styles.container} onPress={onActionPress}>
+      <View style={[styles.wrapper, wrapperStyle]}>
+        <Text style={[styles.iconText, iconTextStyle]}>+</Text>
+      </View>
+    </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-  },
-  background: {
-    flex: 1,
-    resizeMode: "cover",
-  },
-  contentContainer: {
-    flex: 1,
-    alignItems: "center",
-    flexDirection: "column",
-    justifyContent: "space-between",
-  },
-  appTitle: {
-    paddingTop: 20,
-    textAlign: "center",
-    fontSize: 45,
-    fontWeight: "600",
-    color: "#ffffff",
-  },
-  inputContainer: {
-    alignItems: "center",
-    backgroundColor: "#ffffff",
-    width: "88%",
-    height: "44%",
-    padding: 20,
-    marginBottom: 20,
-  },
-  nameInputContainer: {
-    width: "88%",
-    height: 55,
-    borderWidth: 1,
-    height: 50,
-    paddingHorizontal: 10,
-    marginBottom: 30,
-  },
-  nameInputText: {
-    fontSize: 16,
-    fontWeight: "300",
-    color: " #757083",
-    opacity: 0.5,
-    textAlignVertical: "center",
-  },
-  chooseColorText: {
-    fontSize: 16,
-    fontWeight: "300",
-    color: "#171717",
+    width: 26,
+    height: 26,
+    marginLeft: 10,
     marginBottom: 10,
   },
-  chooseColorContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "82%",
-    marginBottom: 40,
-  },
-  colorOption: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-  },
-  selectedColor: {
+  wrapper: {
+    borderRadius: 13,
+    borderColor: "#b2b2b2",
     borderWidth: 2,
-    borderColor: "#757083",
+    flex: 1,
   },
-  buttonEnterChat: {
-    width: "88%",
-    height: 55,
-    backgroundColor: "#757083",
-    padding: 15,
-    alignItems: "center",
-  },
-  enterChatText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#ffffff",
+  iconText: {
+    color: "#b2b2b2",
+    fontWeight: "bold",
+    fontSize: 10,
+    backgroundColor: "transparent",
+    textAlign: "center",
   },
 });
 
-export default Start;
+export default CustomActions;
