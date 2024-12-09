@@ -6,7 +6,13 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 
-const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, storage, userID }) => {
+const CustomActions = ({
+  wrapperStyle,
+  iconTextStyle,
+  onSend,
+  storage,
+  userID,
+}) => {
   const actionSheet = useActionSheet();
 
   const onActionPress = () => {
@@ -40,11 +46,11 @@ const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, storage, userID })
 
   // Send picture
   const generateReference = (uri) => {
-    const timeStamp = (new Date()).getTime();
+    const timeStamp = new Date().getTime();
     const imageName = uri.split("/")[uri.split("/").length - 1];
     return `${userID}-${timeStamp}-${imageName}`;
-  }
-  
+  };
+
   const pickImage = async () => {
     let permissions = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (permissions?.granted) {
@@ -52,7 +58,7 @@ const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, storage, userID })
       if (!result.canceled) await uploadAndSendImage(result.assets[0].uri);
       else Alert.alert("Permissions haven't been granted.");
     }
-  }
+  };
 
   const takePhoto = async () => {
     let permissions = await ImagePicker.requestCameraPermissionsAsync();
@@ -61,7 +67,7 @@ const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, storage, userID })
       if (!result.canceled) await uploadAndSendImage(result.assets[0].uri);
       else Alert.alert("Permissions haven't been granted.");
     }
-  }
+  };
 
   const uploadAndSendImage = async (imageURI) => {
     const uniqueRefString = generateReference(imageURI);
@@ -69,32 +75,52 @@ const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, storage, userID })
     const response = await fetch(imageURI);
     const blob = await response.blob();
     uploadBytes(newUploadRef, blob).then(async (snapshot) => {
-      const imageURL = await getDownloadURL(snapshot.ref)
-      onSend({ image: imageURL })
+      const imageURL = await getDownloadURL(snapshot.ref);
+      console.log("here");
+      onSend([
+        {
+          _id: `${userID}-${new Date().getTime()}`,
+          text: "",
+          user: {
+            _id: userID,
+            name: "user name",
+          },
+          createdAt: new Date(),
+          image: imageURL,
+        },
+      ]);
     });
-  }
+  };
 
   // Send location
   const getLocation = async () => {
-    console.log('click here');
+    console.log("click here");
     let permissions = await Location.requestForegroundPermissionsAsync();
     console.log(permissions);
     if (permissions?.granted) {
       const location = await Location.getCurrentPositionAsync({});
       console.log(location);
       if (location) {
-        onSend({
-          location: {
-            longitude: location.coords.longitude,
-            latitude: location.coords.latitude,
+        onSend([
+          {
+            _id: `${userID}-${new Date().getTime()}`, // Generate a unique ID
+            createdAt: new Date(),
+            location: {
+              longitude: location.coords.longitude,
+              latitude: location.coords.latitude,
+            },
+            user: {
+              _id: userID,
+              name: "user name",
+            },
           },
-        });
+        ]);
       } else Alert.alert("Error occurred while fetching location");
     } else Alert.alert("Permissions haven't been granted.");
   };
 
   return (
-<TouchableOpacity style={styles.container} onPress={onActionPress}>
+    <TouchableOpacity style={styles.container} onPress={onActionPress}>
       <View style={[styles.wrapper, wrapperStyle]}>
         <Text style={[styles.iconText, iconTextStyle]}>+</Text>
       </View>
