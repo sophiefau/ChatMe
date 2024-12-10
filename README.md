@@ -46,7 +46,7 @@ You need to have [Node](https://nodejs.org/en/learn/getting-started/how-to-insta
 
 5. Set up Expo-Go on your own mobile device or a virtual device via Android Studio.
 
-# Preview
+### Preview
 
 ![ChatMe Screenshots of the interface](https://github.com/sophiefau/ChatMe/blob/main/assets/ChatMe.png)
 
