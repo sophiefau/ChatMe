@@ -61,7 +61,6 @@ const Chat = ({ route, navigation, db, storage, isConnected }) => {
 
   // Button to send
   const onSend = (newMessages) => {
-    console.log('onSend')
     addDoc(collection(db, "messages"), newMessages[0]);
   };
 

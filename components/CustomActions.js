@@ -76,7 +76,6 @@ const CustomActions = ({
     const blob = await response.blob();
     uploadBytes(newUploadRef, blob).then(async (snapshot) => {
       const imageURL = await getDownloadURL(snapshot.ref);
-      console.log("here");
       onSend([
         {
           _id: `${userID}-${new Date().getTime()}`,
@@ -94,12 +93,9 @@ const CustomActions = ({
 
   // Send location
   const getLocation = async () => {
-    console.log("click here");
     let permissions = await Location.requestForegroundPermissionsAsync();
-    console.log(permissions);
     if (permissions?.granted) {
       const location = await Location.getCurrentPositionAsync({});
-      console.log(location);
       if (location) {
         onSend([
           {
